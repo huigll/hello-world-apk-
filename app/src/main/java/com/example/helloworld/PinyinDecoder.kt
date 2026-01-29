@@ -44,21 +44,47 @@ class PinyinDecoder(private val context: Context) {
         val usr = File(context.filesDir, "usr_dict.dat")
         if (!usr.exists()) usr.writeBytes(byteArrayOf())
 
-        val afd: AssetFileDescriptor = context.resources.openRawResourceFd(R.raw.dict_pinyin)
-        val ok = nativeImOpenDecoderFd(
-            afd.fileDescriptor,
-            afd.startOffset,
-            afd.length,
-            (usr.absolutePath + "\u0000").encodeToByteArray()
-        )
-        afd.close()
+        // On some builds/devices, res/raw resources may be compressed in the APK.
+        // In that case openRawResourceFd() will throw ("probably compressed").
+        // We then fall back to extracting the dict into filesDir and opening via fd.
+        val ok = try {
+            val afd: AssetFileDescriptor = context.resources.openRawResourceFd(R.raw.dict_pinyin)
+            val ret = nativeImOpenDecoderFd(
+                afd.fileDescriptor,
+                afd.startOffset,
+                afd.length,
+                (usr.absolutePath + "\u0000").encodeToByteArray()
+            )
+            afd.close()
+            ret
+        } catch (t: Throwable) {
+            Log.w("PinyinDecoder", "openRawResourceFd failed (likely compressed). Falling back to extracted file.", t)
+
+            val dictFile = File(context.filesDir, "dict_pinyin.dat")
+            if (!dictFile.exists() || dictFile.length() == 0L) {
+                context.resources.openRawResource(R.raw.dict_pinyin).use { input ->
+                    dictFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+
+            val pfd = android.os.ParcelFileDescriptor.open(dictFile, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
+            val ret = nativeImOpenDecoderFd(
+                pfd.fileDescriptor,
+                0L,
+                dictFile.length(),
+                (usr.absolutePath + "\u0000").encodeToByteArray()
+            )
+            pfd.close()
+            ret
+        }
 
         if (ok) {
-            // Reasonable caps
             nativeImSetMaxLens(64, 64)
             inited = true
         } else {
-            Log.e("PinyinDecoder", "nativeImOpenDecoderFd failed")
+            Log.e("PinyinDecoder", "Failed to initialize pinyin decoder")
         }
     }
 
