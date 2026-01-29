@@ -37,6 +37,14 @@ class InAppKeyboardView @JvmOverloads constructor(
     /** Notifies host to adjust target view direction (e.g. RTL for Arabic). */
     var onLayoutChanged: ((Layout) -> Unit)? = null
 
+    /**
+     * Optional interception hooks.
+     * Return true to consume and prevent default Editable writes.
+     */
+    var onCommitText: ((layout: Layout, text: String) -> Boolean)? = null
+    var onBackspace: ((layout: Layout) -> Boolean)? = null
+    var onSpace: ((layout: Layout) -> Boolean)? = null
+
     init {
         orientation = VERTICAL
         gravity = Gravity.CENTER_HORIZONTAL
@@ -165,14 +173,20 @@ class InAppKeyboardView @JvmOverloads constructor(
         val editable = target ?: return
         when (label) {
             "⌫" -> {
-                val len = editable.length
-                if (len > 0) editable.delete(len - 1, len)
+                val consumed = onBackspace?.invoke(currentLayout) ?: false
+                if (!consumed) {
+                    val len = editable.length
+                    if (len > 0) editable.delete(len - 1, len)
+                }
             }
             "enter" -> {
                 editable.append("\n")
             }
             "space" -> {
-                editable.append(" ")
+                val consumed = onSpace?.invoke(currentLayout) ?: false
+                if (!consumed) {
+                    editable.append(" ")
+                }
             }
             "⇧" -> {
                 shift = !shift
@@ -197,7 +211,10 @@ class InAppKeyboardView @JvmOverloads constructor(
             }
             else -> {
                 val ch = if (shift) label.uppercase() else label
-                editable.append(ch)
+                val consumed = onCommitText?.invoke(currentLayout, ch) ?: false
+                if (!consumed) {
+                    editable.append(ch)
+                }
                 // One-shot shift
                 if (shift) shift = false
             }
