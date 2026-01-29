@@ -67,33 +67,20 @@ class InAppKeyboardView @JvmOverloads constructor(
     }
 
     private fun buildEnQwerty() {
-        addRow(listOf("q","w","e","r","t","y","u","i","o","p"))
-        addRow(listOf("a","s","d","f","g","h","j","k","l"))
-        addRow(listOf("⇧","z","x","c","v","b","n","m","⌫"))
-        addRow(listOf("lang","123","space","enter"))
+        buildFromAskXml("ask_layouts/en_qwerty.xml")
     }
 
     private fun buildZhPinyin() {
-        // Pinyin is basically Latin letters; no candidate conversion in this project.
-        addRow(listOf("q","w","e","r","t","y","u","i","o","p"))
-        addRow(listOf("a","s","d","f","g","h","j","k","l"))
-        addRow(listOf("⇧","z","x","c","v","b","n","m","⌫"))
-        addRow(listOf("lang","123","space","enter"))
+        // Pinyin uses latin letters. We reuse the English layout.
+        buildFromAskXml("ask_layouts/en_qwerty.xml")
     }
 
     private fun buildFrAzerty() {
-        addRow(listOf("a","z","e","r","t","y","u","i","o","p"))
-        addRow(listOf("q","s","d","f","g","h","j","k","l","m"))
-        addRow(listOf("⇧","w","x","c","v","b","n","⌫"))
-        addRow(listOf("lang","123","space","enter"))
+        buildFromAskXml("ask_layouts/fr_azerty.xml")
     }
 
     private fun buildArabic() {
-        // Basic Arabic letters (no diacritics/candidates). RTL is handled by host (EditText direction).
-        addRow(listOf("ض","ص","ث","ق","ف","غ","ع","ه","خ","ح"))
-        addRow(listOf("ش","س","ي","ب","ل","ا","ت","ن","م"))
-        addRow(listOf("⇧","ئ","ء","ؤ","ر","لا","ى","ة","و","ز","⌫"))
-        addRow(listOf("lang","123","space","enter"))
+        buildFromAskXml("ask_layouts/ar_qwerty.xml")
     }
 
     private fun buildSymbols() {
@@ -101,6 +88,30 @@ class InAppKeyboardView @JvmOverloads constructor(
         addRow(listOf("@","#","$","%","&","*","-","+","(",")"))
         addRow(listOf("abc","_","\"","'",":",";","!","?","⌫"))
         addRow(listOf("lang","space","enter"))
+    }
+
+    private fun buildFromAskXml(assetPath: String) {
+        // Parse ASK xml keyboard and render keys.
+        val layout = AskXmlKeyboardParser.parseAsset(context.assets, assetPath)
+
+        layout.rows.forEach { row ->
+            // Convert ASK key definitions into our labels.
+            val labels = row.mapNotNull { key ->
+                when (key.code) {
+                    -1 -> "⇧"
+                    -5 -> "⌫"
+                    null -> null
+                    else -> {
+                        // Prefer explicit label when provided.
+                        key.label ?: key.code.toChar().toString()
+                    }
+                }
+            }
+            if (labels.isNotEmpty()) addRow(labels)
+        }
+
+        // Add our bottom utility row.
+        addRow(listOf("lang","123","space","enter"))
     }
 
     private fun addRow(keys: List<String>) {
