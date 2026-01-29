@@ -28,6 +28,16 @@ class VirtualScreenPresentation(context: Context, display: Display) : Presentati
         val keyboard = InAppKeyboardView(context).apply {
             visibility = View.GONE
             attachTarget(editText.text)
+            onLayoutChanged = { layout ->
+                // For Arabic we need RTL direction; others are LTR.
+                if (layout == InAppKeyboardView.Layout.AR) {
+                    editText.textDirection = View.TEXT_DIRECTION_RTL
+                    editText.layoutDirection = View.LAYOUT_DIRECTION_RTL
+                } else {
+                    editText.textDirection = View.TEXT_DIRECTION_LTR
+                    editText.layoutDirection = View.LAYOUT_DIRECTION_LTR
+                }
+            }
         }
         keyboardContainer.addView(keyboard)
 
