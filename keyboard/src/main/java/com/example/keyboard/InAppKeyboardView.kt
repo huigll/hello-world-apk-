@@ -3,7 +3,10 @@ package com.example.keyboard
 import android.content.Context
 import android.text.Editable
 import android.util.AttributeSet
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -150,7 +153,13 @@ class InAppKeyboardView @JvmOverloads constructor(
                     marginStart = dp(2)
                     marginEnd = dp(2)
                 }
-                setOnClickListener { onKey(label) }
+            }
+
+            if (label == "⌫") {
+                // Long-press backspace = fast delete
+                setupBackspaceRepeater(btn)
+            } else {
+                btn.setOnClickListener { onKey(label) }
             }
 
             // Make space wider in last row layouts
@@ -217,6 +226,41 @@ class InAppKeyboardView @JvmOverloads constructor(
                 }
                 // One-shot shift
                 if (shift) shift = false
+            }
+        }
+    }
+
+    private val handler = Handler(Looper.getMainLooper())
+
+    private fun setupBackspaceRepeater(btn: Button) {
+        val initialDelayMs = 250L
+        val repeatDelayMs = 50L
+
+        var repeating = false
+        val repeatRunnable = object : Runnable {
+            override fun run() {
+                if (!repeating) return
+                onKey("⌫")
+                handler.postDelayed(this, repeatDelayMs)
+            }
+        }
+
+        btn.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    // single delete immediately
+                    onKey("⌫")
+                    repeating = true
+                    handler.postDelayed(repeatRunnable, initialDelayMs)
+                    true
+                }
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    repeating = false
+                    handler.removeCallbacks(repeatRunnable)
+                    true
+                }
+                else -> false
             }
         }
     }
