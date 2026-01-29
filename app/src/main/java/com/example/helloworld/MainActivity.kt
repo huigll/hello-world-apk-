@@ -7,6 +7,8 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.example.keyboard.InAppKeyboardView
+import com.example.keyboard.PinyinDecoder
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 
         val editText = findViewById<EditText>(R.id.et_main_input)
         val keyboardContainer = findViewById<FrameLayout>(R.id.main_keyboard_container)
-        val candidatesContainer = findViewById<LinearLayout>(R.id.candidates_container)
+        val candidatesContainer = findViewById<LinearLayout>(com.example.keyboard.R.id.candidates_container)
 
         // Disable system IME and use our in-app keyboard view.
         try {

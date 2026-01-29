@@ -1,4 +1,4 @@
-package com.example.helloworld
+package com.example.keyboard
 
 import android.content.Context
 import android.content.res.AssetFileDescriptor
