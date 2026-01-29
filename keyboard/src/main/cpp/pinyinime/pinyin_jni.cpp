@@ -20,7 +20,7 @@ static struct {
 } gFileDescriptorOffsets;
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_example_helloworld_PinyinDecoder_nativeImOpenDecoderFd(
+Java_com_example_keyboard_PinyinDecoder_nativeImOpenDecoderFd(
         JNIEnv* env,
         jclass /*clazz*/,
         jobject fd_sys_dict,
@@ -49,26 +49,26 @@ Java_com_example_helloworld_PinyinDecoder_nativeImOpenDecoderFd(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_helloworld_PinyinDecoder_nativeImSetMaxLens(
+Java_com_example_keyboard_PinyinDecoder_nativeImSetMaxLens(
         JNIEnv* /*env*/, jclass /*clazz*/, jint max_sps_len, jint max_hzs_len) {
     im_set_max_lens((size_t)max_sps_len, (size_t)max_hzs_len);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_example_helloworld_PinyinDecoder_nativeImCloseDecoder(
+Java_com_example_keyboard_PinyinDecoder_nativeImCloseDecoder(
         JNIEnv* /*env*/, jclass /*clazz*/) {
     im_close_decoder();
     return JNI_TRUE;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_helloworld_PinyinDecoder_nativeImResetSearch(
+Java_com_example_keyboard_PinyinDecoder_nativeImResetSearch(
         JNIEnv* /*env*/, jclass /*clazz*/) {
     im_reset_search();
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_example_helloworld_PinyinDecoder_nativeImSearch(
+Java_com_example_keyboard_PinyinDecoder_nativeImSearch(
         JNIEnv* env, jclass /*clazz*/, jbyteArray pybuf, jint pylen) {
     jbyte* array_body = env->GetByteArrayElements(pybuf, nullptr);
     jint jret = 0;
@@ -80,7 +80,7 @@ Java_com_example_helloworld_PinyinDecoder_nativeImSearch(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_example_helloworld_PinyinDecoder_nativeImGetChoice(
+Java_com_example_keyboard_PinyinDecoder_nativeImGetChoice(
         JNIEnv* env, jclass /*clazz*/, jint candidateId) {
     if (im_get_candidate(candidateId, retbuf, RET_BUF_LEN)) {
         return env->NewString((unsigned short*)retbuf, (jsize)utf16_strlen(retbuf));
@@ -89,7 +89,7 @@ Java_com_example_helloworld_PinyinDecoder_nativeImGetChoice(
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_example_helloworld_PinyinDecoder_nativeImChoose(
+Java_com_example_keyboard_PinyinDecoder_nativeImChoose(
         JNIEnv* /*env*/, jclass /*clazz*/, jint choiceId) {
     return (jint)im_choose(choiceId);
 }
