@@ -25,9 +25,8 @@
         android:textColorHint="#888888"
         android:backgroundTint="#888888" />
 
-    <include
-        android:id="@+id/candidate_bar"
-        layout="@layout/candidate_bar"
+    <com.example.keyboard.CandidateBarView
+        android:id="@+id/candidate_bar_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp" />
