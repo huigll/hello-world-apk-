@@ -1,4 +1,4 @@
-package com.example.keyboard
+package com.carbit.inappkeyboard.keyboard
 
 import android.content.Context
 import android.text.Editable

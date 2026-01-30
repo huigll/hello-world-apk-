@@ -4,12 +4,12 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
-import com.example.keyboard.ITextCommitTarget
 import androidx.appcompat.app.AppCompatActivity
-import com.example.keyboard.CandidateBarView
-import com.example.keyboard.InAppKeyboardView
-import com.example.keyboard.PinyinDecoder
-import com.example.keyboard.PinyinImeSession
+import com.carbit.inappkeyboard.keyboard.CandidateBarView
+import com.carbit.inappkeyboard.keyboard.ITextCommitTarget
+import com.carbit.inappkeyboard.keyboard.InAppKeyboardView
+import com.carbit.inappkeyboard.keyboard.PinyinDecoder
+import com.carbit.inappkeyboard.keyboard.PinyinImeSession
 
 class MainActivity : AppCompatActivity() {
 

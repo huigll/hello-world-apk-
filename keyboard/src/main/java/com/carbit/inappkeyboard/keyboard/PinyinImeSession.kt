@@ -1,4 +1,4 @@
-package com.example.keyboard
+package com.carbit.inappkeyboard.keyboard
 
 /**
  * Keeps pinyin composing state + candidate list and commits to a target.

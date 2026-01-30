@@ -1,4 +1,4 @@
-package com.example.keyboard
+package com.carbit.inappkeyboard.keyboard
 
 import android.content.res.AssetManager
 import android.util.Xml

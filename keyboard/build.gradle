@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace 'com.example.keyboard'
+    namespace 'com.carbit.inappkeyboard.keyboard'
     compileSdk 34
 
     defaultConfig {

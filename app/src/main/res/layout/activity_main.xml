@@ -25,7 +25,7 @@
         android:textColorHint="#888888"
         android:backgroundTint="#888888" />
 
-    <com.example.keyboard.CandidateBarView
+    <com.carbit.inappkeyboard.keyboard.CandidateBarView
         android:id="@+id/candidate_bar_view"
         android:layout_width="match_parent"
         android:layout_height="50dp"

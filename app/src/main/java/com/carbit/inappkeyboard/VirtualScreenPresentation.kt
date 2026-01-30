@@ -7,7 +7,7 @@ import android.view.Display
 import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
-import com.example.keyboard.InAppKeyboardView
+import com.carbit.inappkeyboard.keyboard.InAppKeyboardView
 
 class VirtualScreenPresentation(context: Context, display: Display) : Presentation(context, display) {
 

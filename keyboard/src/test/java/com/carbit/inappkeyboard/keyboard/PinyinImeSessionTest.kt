@@ -1,4 +1,4 @@
-package com.example.keyboard
+package com.carbit.inappkeyboard.keyboard
 
 import org.junit.Assert.*
 import org.junit.Test
