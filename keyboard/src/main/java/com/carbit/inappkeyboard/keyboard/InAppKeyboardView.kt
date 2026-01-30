@@ -37,12 +37,30 @@ class InAppKeyboardView @JvmOverloads constructor(
 
     enum class InputMode { AUTO, TEXT, NUMBER, PASSWORD }
 
-    /** If AUTO, we infer from EditText.inputType when using [attachTo]. */
-    var inputMode: InputMode = InputMode.AUTO
+    private var inputModeLocked: Boolean = false
+    private var _inputMode: InputMode = InputMode.AUTO
+
+    /**
+     * Input mode policy.
+     *
+     * - Default is [AUTO].
+     * - If you set this to a non-AUTO value, it becomes "locked" and [attachTo] will not override it.
+     * - If you set it back to AUTO, [attachTo] will infer mode from EditText.inputType.
+     */
+    var inputMode: InputMode
+        get() = _inputMode
         set(value) {
-            field = value
+            _inputMode = value
+            inputModeLocked = value != InputMode.AUTO
             applyInputModeIfNeeded()
         }
+
+    private fun setInferredInputMode(value: InputMode) {
+        // Internal helper: inferred from EditText.inputType; should not lock.
+        _inputMode = value
+        inputModeLocked = false
+        applyInputModeIfNeeded()
+    }
 
     var target: Editable? = null
 
@@ -106,9 +124,9 @@ class InAppKeyboardView @JvmOverloads constructor(
             // ignore on older API
         }
 
-        // Infer input mode from inputType (unless explicitly overridden).
-        if (inputMode == InputMode.AUTO) {
-            inputMode = inferInputMode(editText.inputType)
+        // Infer input mode from inputType unless consumer explicitly locked inputMode.
+        if (!inputModeLocked) {
+            setInferredInputMode(inferInputMode(editText.inputType))
         }
 
         wireBuiltInPinyinIfNeeded()
