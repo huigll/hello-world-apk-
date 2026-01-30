@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.helloworld'
+    namespace 'com.carbit.inappkeyboard'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.helloworld"
+        applicationId "com.carbit.inappkeyboard"
         minSdk 21
         targetSdk 34
         versionCode 1

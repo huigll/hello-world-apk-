@@ -1,4 +1,4 @@
-package com.example.helloworld
+package com.carbit.inappkeyboard
 
 import android.app.Presentation
 import android.content.Context
