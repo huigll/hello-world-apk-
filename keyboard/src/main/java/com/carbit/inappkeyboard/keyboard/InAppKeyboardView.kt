@@ -188,8 +188,10 @@ class InAppKeyboardView @JvmOverloads constructor(
                 candidateBar?.clear()
             }
             InputMode.TEXT -> {
-                // keep current layout; default EN if numeric.
-                if (currentLayout == Layout.NUMERIC) setLayout(Layout.EN)
+                // For normal text fields, avoid staying in numeric/symbol-only layouts.
+                if (currentLayout == Layout.NUMERIC || currentLayout == Layout.SYMBOLS) {
+                    setLayout(Layout.EN)
+                }
             }
         }
     }
