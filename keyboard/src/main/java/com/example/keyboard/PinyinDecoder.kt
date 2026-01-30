@@ -10,7 +10,13 @@ import java.io.File
  *
  * We use it ONLY to get candidate strings for a pinyin buffer.
  */
-class PinyinDecoder(private val context: Context) {
+interface IPinyinDecoder {
+    fun reset()
+    fun candidates(pinyin: String, max: Int = 10): List<String>
+    fun choose(index: Int): String
+}
+
+class PinyinDecoder(private val context: Context) : IPinyinDecoder { 
 
     private var inited = false
 
@@ -88,13 +94,13 @@ class PinyinDecoder(private val context: Context) {
         }
     }
 
-    fun reset() {
+    override fun reset() {
         if (!inited) return
         nativeImResetSearch()
     }
 
     /** Returns list of candidates (0..max-1). */
-    fun candidates(pinyin: String, max: Int = 10): List<String> {
+    override fun candidates(pinyin: String, max: Int): List<String> {
         initIfNeeded()
         if (!inited) return emptyList()
 
@@ -110,7 +116,7 @@ class PinyinDecoder(private val context: Context) {
         return out
     }
 
-    fun choose(index: Int): String {
+    override fun choose(index: Int): String {
         initIfNeeded()
         if (!inited) return ""
 

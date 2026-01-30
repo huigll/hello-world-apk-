@@ -1,13 +1,16 @@
 package com.example.keyboard
 
-import android.widget.EditText
-
 /**
- * Keeps pinyin composing state + candidate list and commits to a target EditText.
+ * Keeps pinyin composing state + candidate list and commits to a target.
  *
  * This is not a system IME. It is designed for in-app use.
  */
-class PinyinImeSession(private val decoder: PinyinDecoder) {
+interface ITextCommitTarget {
+    /** Insert text at current cursor (implementation decides exact placement). */
+    fun insert(text: String)
+}
+
+class PinyinImeSession(private val decoder: IPinyinDecoder) {
 
     private val composing = StringBuilder()
 
@@ -20,39 +23,39 @@ class PinyinImeSession(private val decoder: PinyinDecoder) {
 
     fun composingText(): String = composing.toString()
 
-    fun onCommitChar(ch: String, candidateBar: CandidateBarView) {
+    fun onCommitChar(ch: String, candidateBar: ICandidateBar) {
         composing.append(ch)
         refresh(candidateBar)
     }
 
-    fun onBackspace(candidateBar: CandidateBarView): Boolean {
+    fun onBackspace(candidateBar: ICandidateBar): Boolean {
         if (composing.isEmpty()) return false
         composing.setLength(composing.length - 1)
         refresh(candidateBar)
         return true
     }
 
-    fun onSpaceCommitBest(target: EditText, candidateBar: CandidateBarView): Boolean {
+    fun onSpaceCommitBest(target: ITextCommitTarget, candidateBar: ICandidateBar): Boolean {
         if (composing.isEmpty()) return false
         val list = decoder.candidates(composing.toString(), max = 1)
         val commit = list.firstOrNull() ?: composing.toString()
-        target.text.insert(target.selectionStart.coerceAtLeast(target.text.length), commit)
+        target.insert(commit)
         clear()
         candidateBar.clear()
         return true
     }
 
-    fun bindCandidateClicks(target: EditText, candidateBar: CandidateBarView) {
+    fun bindCandidateClicks(target: ITextCommitTarget, candidateBar: ICandidateBar) {
         val list = decoder.candidates(composing.toString(), max = 10)
         candidateBar.setCandidates(list) { index, _ ->
             val commit = decoder.choose(index)
-            target.text.insert(target.selectionStart.coerceAtLeast(target.text.length), commit)
+            target.insert(commit)
             clear()
             candidateBar.clear()
         }
     }
 
-    private fun refresh(candidateBar: CandidateBarView) {
+    private fun refresh(candidateBar: ICandidateBar) {
         if (composing.isEmpty()) {
             candidateBar.clear()
             return

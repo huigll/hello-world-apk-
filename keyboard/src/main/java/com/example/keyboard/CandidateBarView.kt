@@ -10,10 +10,15 @@ import android.widget.LinearLayout
 /**
  * A very small candidate bar (no RecyclerView) for IME-like suggestions.
  */
+interface ICandidateBar {
+    fun setCandidates(candidates: List<String>, onClick: (index: Int, text: String) -> Unit)
+    fun clear()
+}
+
 class CandidateBarView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-) : HorizontalScrollView(context, attrs) {
+) : HorizontalScrollView(context, attrs), ICandidateBar {
 
     private val container: LinearLayout
 
@@ -23,7 +28,7 @@ class CandidateBarView @JvmOverloads constructor(
         container = findViewById(R.id.candidates_container)
     }
 
-    fun setCandidates(candidates: List<String>, onClick: (index: Int, text: String) -> Unit) {
+    override fun setCandidates(candidates: List<String>, onClick: (index: Int, text: String) -> Unit) {
         container.removeAllViews()
 
         if (candidates.isEmpty()) {
@@ -44,7 +49,7 @@ class CandidateBarView @JvmOverloads constructor(
         visibility = VISIBLE
     }
 
-    fun clear() {
+    override fun clear() {
         container.removeAllViews()
         visibility = INVISIBLE
     }

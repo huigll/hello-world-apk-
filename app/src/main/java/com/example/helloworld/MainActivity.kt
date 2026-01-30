@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
+import com.example.keyboard.ITextCommitTarget
 import androidx.appcompat.app.AppCompatActivity
 import com.example.keyboard.CandidateBarView
 import com.example.keyboard.InAppKeyboardView
@@ -33,13 +34,19 @@ class MainActivity : AppCompatActivity() {
             // ignore on older API
         }
 
+        val commitTarget = object : ITextCommitTarget {
+            override fun insert(text: String) {
+                editText.text.insert(editText.selectionStart.coerceAtLeast(editText.text.length), text)
+            }
+        }
+
         fun refreshCandidates() {
             if (!pinyinSession.hasComposing()) {
                 candidateBar.clear()
                 return
             }
             // Build candidates and wire click-to-commit.
-            pinyinSession.bindCandidateClicks(editText, candidateBar)
+            pinyinSession.bindCandidateClicks(commitTarget, candidateBar)
         }
 
         val keyboard = InAppKeyboardView(this).apply {
@@ -84,7 +91,7 @@ class MainActivity : AppCompatActivity() {
 
             onSpace = { layout ->
                 if (layout == InAppKeyboardView.Layout.ZH_PINYIN) {
-                    val consumed = pinyinSession.onSpaceCommitBest(editText, candidateBar)
+                    val consumed = pinyinSession.onSpaceCommitBest(commitTarget, candidateBar)
                     if (consumed) refreshCandidates()
                     consumed
                 } else {
