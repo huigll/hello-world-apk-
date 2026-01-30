@@ -84,7 +84,10 @@ def find(root, pred):
 
 
 def tap_res_with_scroll(res_id: str, max_scrolls=7, tag="tap") -> bool:
-    # tries to bring control into view by swiping up within screen.
+    """Try to tap a view by resource-id, scrolling if needed.
+
+    Also verifies focus for EditText-like targets: after tapping, re-dumps and checks `focused=true`.
+    """
     for i in range(max_scrolls + 1):
         xml = dump(f"{tag}_{i}")
         if not xml:
@@ -92,10 +95,33 @@ def tap_res_with_scroll(res_id: str, max_scrolls=7, tag="tap") -> bool:
         root = parse(xml)
         n = find(root, lambda n: n.attrib.get("resource-id") == res_id)
         if n is not None:
-            cx, cy, _ = center(n.attrib.get("bounds"))
+            c = center(n.attrib.get("bounds"))
+            if not c:
+                return False
+            cx, cy, _ = c
+
+            # Tap twice if needed (some OEMs are flaky on first tap).
+            tap(cx, cy)
+            time.sleep(0.15)
             tap(cx, cy)
             time.sleep(0.25)
-            return True
+
+            # Verify focus when possible
+            xml2 = dump(f"{tag}_{i}_after")
+            if xml2:
+                r2 = parse(xml2)
+                n2 = find(r2, lambda n: n.attrib.get("resource-id") == res_id)
+                if n2 is not None:
+                    focused = n2.attrib.get("focused")
+                    # If it's focusable but didn't become focused, treat as failure.
+                    if n2.attrib.get("focusable") == "true" and focused != "true":
+                        # keep trying by scrolling a bit and retry
+                        pass
+                    else:
+                        return True
+            else:
+                return True
+
         # swipe up (content moves up)
         swipe(540, 820, 540, 360, 320)
         time.sleep(0.2)
