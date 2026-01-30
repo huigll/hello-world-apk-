@@ -6,114 +6,77 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.carbit.inappkeyboard.keyboard.CandidateBarView
-import com.carbit.inappkeyboard.keyboard.ITextCommitTarget
 import com.carbit.inappkeyboard.keyboard.InAppKeyboardView
-import com.carbit.inappkeyboard.keyboard.PinyinDecoder
-import com.carbit.inappkeyboard.keyboard.PinyinImeSession
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var pinyin: PinyinDecoder
-    private lateinit var pinyinSession: PinyinImeSession
+    private var activeEditText: EditText? = null
+    private lateinit var keyboard: InAppKeyboardView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        pinyin = PinyinDecoder(this)
-        pinyinSession = PinyinImeSession(pinyin)
+        val etText = findViewById<EditText>(R.id.et_text)
+        val etNumber = findViewById<EditText>(R.id.et_number)
+        val etPassword = findViewById<EditText>(R.id.et_password)
+        val etPhone = findViewById<EditText>(R.id.et_phone)
 
-        val editText = findViewById<EditText>(R.id.et_main_input)
         val keyboardContainer = findViewById<FrameLayout>(R.id.main_keyboard_container)
         val candidateBar = findViewById<CandidateBarView>(R.id.candidate_bar_view)
 
-        // Disable system IME and use our in-app keyboard view.
-        try {
-            editText.showSoftInputOnFocus = false
-        } catch (_: Throwable) {
-            // ignore on older API
-        }
-
-        val commitTarget = object : ITextCommitTarget {
-            override fun insert(text: String) {
-                editText.text.insert(editText.selectionStart.coerceAtLeast(editText.text.length), text)
-            }
-        }
-
-        fun refreshCandidates() {
-            if (!pinyinSession.hasComposing()) {
-                candidateBar.clear()
-                return
-            }
-            // Build candidates and wire click-to-commit.
-            pinyinSession.bindCandidateClicks(commitTarget, candidateBar)
-        }
-
-        val keyboard = InAppKeyboardView(this).apply {
+        keyboard = InAppKeyboardView(this).apply {
             visibility = View.GONE
-            attachTarget(editText.text)
+
+            // Keep text direction aligned with selected layout (e.g. RTL for Arabic).
             onLayoutChanged = { layout ->
-                if (layout == InAppKeyboardView.Layout.AR) {
-                    editText.textDirection = View.TEXT_DIRECTION_RTL
-                    editText.layoutDirection = View.LAYOUT_DIRECTION_RTL
-                } else {
-                    editText.textDirection = View.TEXT_DIRECTION_LTR
-                    editText.layoutDirection = View.LAYOUT_DIRECTION_LTR
-                }
-
-                // Clear pinyin state when leaving ZH mode.
-                if (layout != InAppKeyboardView.Layout.ZH_PINYIN) {
-                    pinyinSession.clear()
-                    refreshCandidates()
-                }
-            }
-
-            // Intercept key presses for ZH mode to build pinyin buffer.
-            onCommitText = { layout, text ->
-                if (layout == InAppKeyboardView.Layout.ZH_PINYIN) {
-                    pinyinSession.onCommitChar(text, candidateBar)
-                    refreshCandidates()
-                    true
-                } else {
-                    false
-                }
-            }
-
-            onBackspace = { layout ->
-                if (layout == InAppKeyboardView.Layout.ZH_PINYIN) {
-                    val consumed = pinyinSession.onBackspace(candidateBar)
-                    if (consumed) refreshCandidates()
-                    consumed
-                } else {
-                    false
-                }
-            }
-
-            onSpace = { layout ->
-                if (layout == InAppKeyboardView.Layout.ZH_PINYIN) {
-                    val consumed = pinyinSession.onSpaceCommitBest(commitTarget, candidateBar)
-                    if (consumed) refreshCandidates()
-                    consumed
-                } else {
-                    false
+                val et = activeEditText
+                if (et != null) {
+                    if (layout == InAppKeyboardView.Layout.AR) {
+                        et.textDirection = View.TEXT_DIRECTION_RTL
+                        et.layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    } else {
+                        et.textDirection = View.TEXT_DIRECTION_LTR
+                        et.layoutDirection = View.LAYOUT_DIRECTION_LTR
+                    }
                 }
             }
         }
-
         keyboardContainer.addView(keyboard)
 
-        editText.setOnFocusChangeListener { _, hasFocus ->
-            keyboard.visibility = if (hasFocus) View.VISIBLE else View.GONE
+        fun bindEditText(et: EditText) {
+            et.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) return@setOnFocusChangeListener
+
+                activeEditText = et
+
+                // Only show candidate bar for normal text fields.
+                // (Password/number/phone will be inferred by library and candidates will be disabled.)
+                keyboard.attachTo(et, candidateBar)
+                keyboard.visibility = View.VISIBLE
+            }
+
+            et.setOnClickListener {
+                activeEditText = et
+                keyboard.attachTo(et, candidateBar)
+                keyboard.visibility = View.VISIBLE
+            }
         }
-        editText.setOnClickListener {
-            keyboard.visibility = View.VISIBLE
-        }
+
+        bindEditText(etText)
+        bindEditText(etNumber)
+        bindEditText(etPassword)
+        bindEditText(etPhone)
+
+        // Focus the first field by default.
+        etText.requestFocus()
     }
 
     override fun onDestroy() {
         try {
-            pinyin.close()
-        } catch (_: Throwable) {}
+            keyboard.release()
+        } catch (_: Throwable) {
+        }
         super.onDestroy()
     }
 }

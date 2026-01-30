@@ -9,21 +9,102 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World"
+        android:text="In-App Keyboard Demo"
         android:textColor="#FFFFFF"
         android:textSize="18sp" />
 
-    <EditText
-        android:id="@+id/et_main_input"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:hint="Tap to type"
-        android:imeOptions="actionDone"
-        android:inputType="text"
-        android:textColor="#FFFFFF"
-        android:textColorHint="#888888"
-        android:backgroundTint="#888888" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:layout_marginTop="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Text"
+                android:textColor="#CCCCCC" />
+
+            <EditText
+                android:id="@+id/et_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Text (supports ZH Pinyin candidate bar)"
+                android:imeOptions="actionDone"
+                android:inputType="text"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:backgroundTint="#888888" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Number"
+                android:textColor="#CCCCCC" />
+
+            <EditText
+                android:id="@+id/et_number"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Number"
+                android:imeOptions="actionDone"
+                android:inputType="number"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:backgroundTint="#888888" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Password"
+                android:textColor="#CCCCCC" />
+
+            <EditText
+                android:id="@+id/et_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password"
+                android:imeOptions="actionDone"
+                android:inputType="textPassword"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:backgroundTint="#888888" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Phone"
+                android:textColor="#CCCCCC" />
+
+            <EditText
+                android:id="@+id/et_phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Phone"
+                android:imeOptions="actionDone"
+                android:inputType="phone"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:backgroundTint="#888888" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="(Tap any field to show keyboard)"
+                android:textColor="#777777" />
+
+        </LinearLayout>
+    </ScrollView>
 
     <com.carbit.inappkeyboard.keyboard.CandidateBarView
         android:id="@+id/candidate_bar_view"
@@ -36,8 +117,7 @@
     <FrameLayout
         android:id="@+id/main_keyboard_container"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp" />
 
 </LinearLayout>
