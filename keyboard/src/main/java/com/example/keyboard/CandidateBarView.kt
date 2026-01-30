@@ -25,6 +25,13 @@ class CandidateBarView @JvmOverloads constructor(
 
     fun setCandidates(candidates: List<String>, onClick: (index: Int, text: String) -> Unit) {
         container.removeAllViews()
+
+        if (candidates.isEmpty()) {
+            // Keep layout space (CandidateBarView should be INVISIBLE rather than GONE)
+            visibility = INVISIBLE
+            return
+        }
+
         candidates.forEachIndexed { index, cand ->
             val btn = Button(context).apply {
                 text = cand
@@ -33,9 +40,12 @@ class CandidateBarView @JvmOverloads constructor(
             }
             container.addView(btn)
         }
+
+        visibility = VISIBLE
     }
 
     fun clear() {
         container.removeAllViews()
+        visibility = INVISIBLE
     }
 }
