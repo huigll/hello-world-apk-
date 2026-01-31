@@ -1,11 +1,11 @@
 package com.carbit.inappkeyboard
 
+import android.view.View
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.carbit.inappkeyboard.keyboard.CandidateBarView
+import com.carbit.inappkeyboard.keyboard.InAppKeyboardPanelView
 import com.carbit.inappkeyboard.keyboard.InAppKeyboardView
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -19,13 +19,13 @@ class KeyboardEngineInstrumentedTest {
     fun text_mode_injectKey_appends_text() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { a ->
-                val keyboardContainer = a.findViewById<FrameLayout>(R.id.main_keyboard_container)
-                val keyboard = keyboardContainer.getChildAt(0) as InAppKeyboardView
-                val candidateBar = a.findViewById<CandidateBarView>(R.id.candidate_bar_view)
+                val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
+                val keyboard = panel.keyboardView
+                val candidateBar = panel.candidateBarView
                 val et = a.findViewById<EditText>(R.id.et_text)
 
                 et.setText("")
-                keyboard.attachTo(et, candidateBar)
+                panel.attachTo(et)
 
                 keyboard.injectKey("a")
                 keyboard.injectKey("b")
@@ -40,13 +40,12 @@ class KeyboardEngineInstrumentedTest {
     fun number_mode_injectKey_appends_digits() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { a ->
-                val keyboardContainer = a.findViewById<FrameLayout>(R.id.main_keyboard_container)
-                val keyboard = keyboardContainer.getChildAt(0) as InAppKeyboardView
-                val candidateBar = a.findViewById<CandidateBarView>(R.id.candidate_bar_view)
+                val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
+                val keyboard = panel.keyboardView
                 val et = a.findViewById<EditText>(R.id.et_number)
 
                 et.setText("")
-                keyboard.attachTo(et, candidateBar)
+                panel.attachTo(et)
 
                 keyboard.injectKey("1")
                 keyboard.injectKey("2")
@@ -61,13 +60,12 @@ class KeyboardEngineInstrumentedTest {
     fun password_mode_injectKey_changes_value() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { a ->
-                val keyboardContainer = a.findViewById<FrameLayout>(R.id.main_keyboard_container)
-                val keyboard = keyboardContainer.getChildAt(0) as InAppKeyboardView
-                val candidateBar = a.findViewById<CandidateBarView>(R.id.candidate_bar_view)
+                val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
+                val keyboard = panel.keyboardView
                 val et = a.findViewById<EditText>(R.id.et_password)
 
                 et.setText("")
-                keyboard.attachTo(et, candidateBar)
+                panel.attachTo(et)
 
                 keyboard.injectKey("a")
                 keyboard.injectKey("b")
@@ -81,13 +79,13 @@ class KeyboardEngineInstrumentedTest {
     fun zh_pinyin_generates_candidates_after_typing() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { a ->
-                val keyboardContainer = a.findViewById<FrameLayout>(R.id.main_keyboard_container)
-                val keyboard = keyboardContainer.getChildAt(0) as InAppKeyboardView
-                val candidateBar = a.findViewById<CandidateBarView>(R.id.candidate_bar_view)
+                val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
+                val keyboard = panel.keyboardView
+                val candidateBar = panel.candidateBarView
                 val et = a.findViewById<EditText>(R.id.et_text)
 
                 et.setText("")
-                keyboard.attachTo(et, candidateBar)
+                panel.attachTo(et)
                 keyboard.setLayout(InAppKeyboardView.Layout.ZH_PINYIN)
 
                 keyboard.injectKey("n")
@@ -98,7 +96,7 @@ class KeyboardEngineInstrumentedTest {
                 )
 
                 // Candidate visibility and count are the main stability target.
-                assertTrue("candidate bar should be visible", candidateBar.visibility == android.view.View.VISIBLE)
+                assertTrue("candidate bar should be visible", candidateBar.visibility == View.VISIBLE)
                 assertTrue("expected >= 1 candidate", container.childCount >= 1)
             }
         }

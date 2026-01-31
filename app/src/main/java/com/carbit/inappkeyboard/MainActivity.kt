@@ -4,16 +4,17 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.Button
-import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.carbit.inappkeyboard.keyboard.CandidateBarView
+import com.carbit.inappkeyboard.keyboard.InAppKeyboardPanelView
 import com.carbit.inappkeyboard.keyboard.InAppKeyboardView
 
 class MainActivity : AppCompatActivity() {
 
     private var activeEditText: EditText? = null
-    private lateinit var keyboard: InAppKeyboardView
+    private lateinit var keyboardPanel: InAppKeyboardPanelView
+    private val keyboard: InAppKeyboardView
+        get() = keyboardPanel.keyboardView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,13 +32,7 @@ class MainActivity : AppCompatActivity() {
         val etPassword = findViewById<EditText>(R.id.et_password)
         val etPhone = findViewById<EditText>(R.id.et_phone)
 
-        val keyboardContainer = findViewById<FrameLayout>(R.id.main_keyboard_container)
-        val candidateBar = findViewById<CandidateBarView>(R.id.candidate_bar_view)
-
-        keyboard = InAppKeyboardView(this).apply {
-            visibility = View.GONE
-        }
-        keyboardContainer.addView(keyboard)
+        keyboardPanel = findViewById(R.id.keyboard_panel)
 
         // Keep text direction aligned with selected layout (e.g. RTL for Arabic).
         keyboard.onLayoutChanged = { layout ->
@@ -65,8 +60,7 @@ class MainActivity : AppCompatActivity() {
             activeEditText = et
             et.requestFocus()
 
-            keyboard.attachTo(et, candidateBar)
-            keyboard.visibility = View.VISIBLE
+            keyboardPanel.attachTo(et)
         }
 
         fun bindEditText(et: EditText, label: String) {
@@ -90,8 +84,7 @@ class MainActivity : AppCompatActivity() {
         btnPassword.setOnClickListener { showField("Password", etPassword) }
         btnPhone.setOnClickListener { showField("Phone", etPhone) }
         btnHide.setOnClickListener {
-            keyboard.visibility = View.GONE
-            candidateBar.clear()
+            keyboardPanel.hideKeyboard()
             activeEditText?.clearFocus()
         }
 
@@ -101,7 +94,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         try {
-            keyboard.release()
+            keyboardPanel.release()
         } catch (_: Throwable) {
         }
         super.onDestroy()

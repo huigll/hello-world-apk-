@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared ids that consumers (demo/tests) may want to reference. -->
+    <item type="id" name="keyboard_view" />
+    <item type="id" name="candidate_bar_view" />
+    <item type="id" name="main_keyboard_container" />
+    <item type="id" name="keyboard_panel" />
+</resources>

@@ -119,16 +119,8 @@
 
     </FrameLayout>
 
-    <com.carbit.inappkeyboard.keyboard.CandidateBarView
-        android:id="@+id/candidate_bar_view"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="#222222"
-        android:layout_marginTop="8dp"
-        android:visibility="invisible" />
-
-    <FrameLayout
-        android:id="@+id/main_keyboard_container"
+    <com.carbit.inappkeyboard.keyboard.InAppKeyboardPanelView
+        android:id="@+id/keyboard_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp" />
