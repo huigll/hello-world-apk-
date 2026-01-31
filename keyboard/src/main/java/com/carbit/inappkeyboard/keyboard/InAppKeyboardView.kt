@@ -434,6 +434,18 @@ class InAppKeyboardView @JvmOverloads constructor(
 
     private var shift = false
 
+    /**
+     * Test/automation hook.
+     *
+     * Some devices do not expose custom keyboard children via UIAutomator dumps, and external ADB
+     * tapping is flaky. Instrumentation tests should call this to drive the keyboard logic
+     * deterministically.
+     */
+    @androidx.annotation.VisibleForTesting
+    fun injectKey(label: String) {
+        onKey(label)
+    }
+
     private fun onKey(label: String) {
         val editable = target ?: return
         when (label) {
