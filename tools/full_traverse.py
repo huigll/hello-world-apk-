@@ -31,6 +31,12 @@ def _default_adb() -> str:
     if adb:
         return adb
 
+    # Prefer PATH if available.
+    from shutil import which
+    w = which("adb")
+    if w:
+        return w
+
     # If ANDROID_HOME is set.
     android_home = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
     if android_home:
@@ -43,7 +49,7 @@ def _default_adb() -> str:
     if os.path.exists(cand):
         return cand
 
-    # Fallback to PATH.
+    # Final fallback (relies on PATH at runtime).
     return "adb"
 
 
