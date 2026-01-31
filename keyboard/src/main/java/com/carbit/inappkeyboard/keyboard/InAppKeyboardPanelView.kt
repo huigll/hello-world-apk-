@@ -20,6 +20,13 @@ class InAppKeyboardPanelView @JvmOverloads constructor(
     val candidateBarView: CandidateBarView
     val keyboardView: InAppKeyboardView
 
+    /** Convenience proxy. */
+    var inputMode: InAppKeyboardView.InputMode
+        get() = keyboardView.inputMode
+        set(value) {
+            keyboardView.inputMode = value
+        }
+
     init {
         orientation = VERTICAL
 
@@ -47,18 +54,39 @@ class InAppKeyboardPanelView @JvmOverloads constructor(
     }
 
     /**
-     * Attach keyboard to the given [EditText].
+     * Bind this panel to an [EditText].
      *
-     * This will:
-     * - disable system IME (via InAppKeyboardView.attachTo)
-     * - wire pinyin candidate bar when applicable
+     * Behavior:
+     * - user click/focus => attach + show
+     * - losing focus => hide
+     */
+    fun bindTo(editText: EditText) {
+        editText.setOnClickListener {
+            attachTo(editText)
+            show()
+        }
+        editText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                attachTo(editText)
+                show()
+            } else {
+                hide()
+            }
+        }
+    }
+
+    /**
+     * Attach keyboard logic to the given [EditText] (does not change visibility).
      */
     fun attachTo(editText: EditText) {
         keyboardView.attachTo(editText, candidateBarView)
+    }
+
+    fun show() {
         keyboardView.visibility = View.VISIBLE
     }
 
-    fun hideKeyboard() {
+    fun hide() {
         keyboardView.visibility = View.GONE
         candidateBarView.clear()
     }

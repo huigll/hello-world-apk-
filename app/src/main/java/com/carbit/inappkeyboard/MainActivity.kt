@@ -58,37 +58,21 @@ class MainActivity : AppCompatActivity() {
             tvCurrent.text = "Current: $type"
 
             activeEditText = et
-            et.requestFocus()
-
-            keyboardPanel.attachTo(et)
+            // Do not force-show the keyboard here; let user click/focus to show it.
+            keyboardPanel.bindTo(et)
         }
 
-        fun bindEditText(et: EditText, label: String) {
-            et.setOnClickListener {
-                showField(label, et)
-            }
-            et.setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) {
-                    showField(label, et)
-                }
-            }
-        }
-
-        bindEditText(etText, "Text")
-        bindEditText(etNumber, "Number")
-        bindEditText(etPassword, "Password")
-        bindEditText(etPhone, "Phone")
-
+        // Tabs just switch which field is visible; keyboard shows when user taps the field.
         btnText.setOnClickListener { showField("Text", etText) }
         btnNumber.setOnClickListener { showField("Number", etNumber) }
         btnPassword.setOnClickListener { showField("Password", etPassword) }
         btnPhone.setOnClickListener { showField("Phone", etPhone) }
         btnHide.setOnClickListener {
-            keyboardPanel.hideKeyboard()
+            keyboardPanel.hide()
             activeEditText?.clearFocus()
         }
 
-        // Default to Text.
+        // Default to Text (keyboard remains hidden until user taps the field).
         showField("Text", etText)
     }
 
