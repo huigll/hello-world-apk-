@@ -16,7 +16,7 @@ Usage:
   cd repo && python3 tools/full_traverse.py
 
 Env overrides:
-  ADB, PKG, ACT, UI_DUMP
+  ADB, SERIAL, PKG, ACT, UI_DUMP
 """
 
 import os
@@ -25,7 +25,31 @@ import time
 import subprocess
 import xml.etree.ElementTree as ET
 
-ADB = os.environ.get("ADB", "/home/larry/android-dev/sdk/platform-tools/adb")
+def _default_adb() -> str:
+    # Prefer explicit env override.
+    adb = os.environ.get("ADB")
+    if adb:
+        return adb
+
+    # If ANDROID_HOME is set.
+    android_home = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
+    if android_home:
+        cand = os.path.join(android_home, "platform-tools", "adb")
+        if os.path.exists(cand):
+            return cand
+
+    # Workspace default (common in this repo environment).
+    cand = "/home/ubuntu/clawd/android-sdk/platform-tools/adb"
+    if os.path.exists(cand):
+        return cand
+
+    # Fallback to PATH.
+    return "adb"
+
+
+ADB = _default_adb()
+SERIAL = os.environ.get("SERIAL")  # optional: specific device id for ADB
+
 PKG = os.environ.get("PKG", "com.carbit.inappkeyboard")
 ACT = os.environ.get("ACT", "com.carbit.inappkeyboard/.MainActivity")
 DUMP_PATH = os.environ.get("UI_DUMP", "/sdcard/window_dump.xml")
@@ -43,12 +67,42 @@ ET_PHONE = f"{PKG}:id/et_phone"
 KBD_CONTAINER = f"{PKG}:id/main_keyboard_container"
 
 
+def adb_devices() -> list[str]:
+    out = subprocess.check_output([ADB, "devices"], timeout=15).decode("utf-8", "ignore")
+    devs: list[str] = []
+    for line in out.splitlines():
+        line = line.strip()
+        if not line or line.startswith("List of devices"):
+            continue
+        parts = line.split()
+        if len(parts) >= 2 and parts[1] == "device":
+            devs.append(parts[0])
+    return devs
+
+
+def _resolved_serial() -> str | None:
+    if SERIAL:
+        return SERIAL
+    devs = adb_devices()
+    if len(devs) == 1:
+        return devs[0]
+    return None
+
+
+def _adb_base_cmd():
+    cmd = [ADB]
+    serial = _resolved_serial()
+    if serial:
+        cmd += ["-s", serial]
+    return cmd
+
+
 def sh(*args, timeout=30) -> str:
-    return subprocess.check_output([ADB, "shell", *args], timeout=timeout).decode("utf-8", "ignore")
+    return subprocess.check_output([*_adb_base_cmd(), "shell", *args], timeout=timeout).decode("utf-8", "ignore")
 
 
 def run(*args, timeout=30):
-    subprocess.run([ADB, "shell", *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout, check=False)
+    subprocess.run([*_adb_base_cmd(), "shell", *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout, check=False)
 
 
 def dump(tag: str) -> str:
@@ -247,6 +301,23 @@ def test_field(name: str, tab_res: str, et_res: str, expect_digits: bool = False
 
 def main():
     all_anoms = []
+
+    # Preflight ADB
+    try:
+        subprocess.check_call([ADB, "version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+    except Exception as e:
+        print(f"ERROR: adb not runnable: {ADB} ({e})")
+        raise SystemExit(2)
+
+    devs = adb_devices()
+    serial = _resolved_serial()
+    if not serial:
+        print(f"ERROR: no unique device selected. Set SERIAL=<deviceId>. Detected devices={devs}")
+        raise SystemExit(3)
+
+    if serial not in devs:
+        print(f"ERROR: selected SERIAL not found/unauthorized: {serial}. Detected devices={devs}")
+        raise SystemExit(4)
 
     run("am", "force-stop", PKG)
     run("pm", "clear", PKG)
