@@ -1,5 +1,6 @@
 package com.carbit.inappkeyboard
 
+import android.text.InputType
 import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -15,6 +16,13 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class KeyboardEngineInstrumentedTest {
+
+    private fun assertLayoutCycle(keyboard: InAppKeyboardView, expected: List<InAppKeyboardView.Layout>) {
+        expected.forEachIndexed { i, layout ->
+            assertEquals("layout mismatch at step $i", layout, keyboard.currentLayout)
+            if (i != expected.lastIndex) keyboard.injectKey("lang")
+        }
+    }
 
     @Test
     fun text_mode_injectKey_appends_text() {
@@ -78,6 +86,93 @@ class KeyboardEngineInstrumentedTest {
                 keyboard.injectKey("a")
 
                 assertEquals("@a", et.text.toString())
+            }
+        }
+    }
+
+    @Test
+    fun inputMode_auto_infers_layouts_from_inputType() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { a ->
+                val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
+                val keyboard = panel.keyboardView
+
+                // TEXT
+                val etText = a.findViewById<EditText>(R.id.et_text)
+                val textClass = etText.inputType and InputType.TYPE_MASK_CLASS
+                assertEquals(InputType.TYPE_CLASS_TEXT, textClass)
+
+                panel.attachTo(etText)
+                assertEquals(InAppKeyboardView.InputMode.TEXT, keyboard.inputMode)
+
+                // NUMBER
+                val etNumber = a.findViewById<EditText>(R.id.et_number)
+                panel.attachTo(etNumber)
+                assertEquals(InAppKeyboardView.Layout.NUMERIC, keyboard.currentLayout)
+
+                // PHONE (treated as numeric)
+                val etPhone = a.findViewById<EditText>(R.id.et_phone)
+                panel.attachTo(etPhone)
+                assertEquals(InAppKeyboardView.Layout.NUMERIC, keyboard.currentLayout)
+
+                // PASSWORD should land on EN.
+                val etPassword = a.findViewById<EditText>(R.id.et_password)
+                panel.attachTo(etPassword)
+                assertEquals(InAppKeyboardView.Layout.EN, keyboard.currentLayout)
+            }
+        }
+    }
+
+    @Test
+    fun text_mode_lang_cycles_EN_ZH_FR_AR_EN() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { a ->
+                val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
+                val keyboard = panel.keyboardView
+                val et = a.findViewById<EditText>(R.id.et_text)
+
+                panel.attachTo(et)
+                keyboard.setLayout(InAppKeyboardView.Layout.EN)
+
+                assertLayoutCycle(
+                    keyboard,
+                    listOf(
+                        InAppKeyboardView.Layout.EN,
+                        InAppKeyboardView.Layout.ZH_PINYIN,
+                        InAppKeyboardView.Layout.FR,
+                        InAppKeyboardView.Layout.AR,
+                        InAppKeyboardView.Layout.EN,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun number_mode_symbols_toggle_returns_to_numeric() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { a ->
+                val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
+                val keyboard = panel.keyboardView
+                val et = a.findViewById<EditText>(R.id.et_number)
+
+                et.setText("")
+                panel.attachTo(et)
+                assertEquals(InAppKeyboardView.Layout.NUMERIC, keyboard.currentLayout)
+
+                // Toggle to symbols from numeric
+                keyboard.injectKey("123")
+                assertEquals(InAppKeyboardView.Layout.SYMBOLS, keyboard.currentLayout)
+
+                // Note: number EditText will reject non-digit chars; use a digit that exists on symbols.
+                keyboard.injectKey("1")
+
+                // Back to numeric due to inputMode NUMBER
+                keyboard.injectKey("abc")
+                assertEquals(InAppKeyboardView.Layout.NUMERIC, keyboard.currentLayout)
+                keyboard.injectKey("2")
+
+                assertEquals("12", et.text.toString())
             }
         }
     }

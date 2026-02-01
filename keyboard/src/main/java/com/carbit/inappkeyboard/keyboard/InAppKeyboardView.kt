@@ -198,11 +198,8 @@ class InAppKeyboardView @JvmOverloads constructor(
             }
             InputMode.PASSWORD -> {
                 // Avoid pinyin/candidates by default.
-                if (currentLayout == Layout.ZH_PINYIN) setLayout(Layout.EN)
-                // If already on symbols/numeric keep; otherwise use EN.
-                if (currentLayout != Layout.EN && currentLayout != Layout.SYMBOLS && currentLayout != Layout.NUMERIC) {
-                    setLayout(Layout.EN)
-                }
+                // Always start from EN for password fields.
+                if (currentLayout != Layout.EN) setLayout(Layout.EN)
                 candidateBar?.clear()
             }
             InputMode.TEXT -> {
