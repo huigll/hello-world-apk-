@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="InAppKeyboardPanelView">
+        <!-- Height of the candidate bar area. Default is 50dp. -->
+        <attr name="candidateBarHeight" format="dimension" />
+
+        <!-- Whether the keyboard should hide automatically when the bound EditText loses focus. Default true. -->
+        <attr name="autoHideOnBlur" format="boolean" />
+
+        <!-- Whether the keyboard should show automatically when the bound EditText is clicked/focused. Default true. -->
+        <attr name="autoShowOnFocus" format="boolean" />
+    </declare-styleable>
+
+</resources>

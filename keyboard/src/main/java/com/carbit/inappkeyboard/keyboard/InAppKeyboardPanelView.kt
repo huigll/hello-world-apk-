@@ -10,7 +10,7 @@ import android.widget.LinearLayout
 /**
  * A convenience composite view: CandidateBarView + InAppKeyboardView.
  *
- * Goal: make it trivial for consumers to drop a single view into XML and call [attachTo].
+ * Goal: make it trivial for consumers to drop a single view into XML and bind it to an EditText.
  */
 class InAppKeyboardPanelView @JvmOverloads constructor(
     context: Context,
@@ -27,8 +27,20 @@ class InAppKeyboardPanelView @JvmOverloads constructor(
             keyboardView.inputMode = value
         }
 
+    var autoShowOnFocus: Boolean = true
+    var autoHideOnBlur: Boolean = true
+
     init {
         orientation = VERTICAL
+
+        val a = context.obtainStyledAttributes(attrs, R.styleable.InAppKeyboardPanelView)
+        val candidateBarHeightPx = a.getDimensionPixelSize(
+            R.styleable.InAppKeyboardPanelView_candidateBarHeight,
+            dp(50),
+        )
+        autoShowOnFocus = a.getBoolean(R.styleable.InAppKeyboardPanelView_autoShowOnFocus, true)
+        autoHideOnBlur = a.getBoolean(R.styleable.InAppKeyboardPanelView_autoHideOnBlur, true)
+        a.recycle()
 
         candidateBarView = CandidateBarView(context).apply {
             id = R.id.candidate_bar_view
@@ -48,7 +60,7 @@ class InAppKeyboardPanelView @JvmOverloads constructor(
 
         addView(
             candidateBarView,
-            LayoutParams(LayoutParams.MATCH_PARENT, dp(50)),
+            LayoutParams(LayoutParams.MATCH_PARENT, candidateBarHeightPx),
         )
         addView(keyboardContainer)
     }
@@ -56,28 +68,26 @@ class InAppKeyboardPanelView @JvmOverloads constructor(
     /**
      * Bind this panel to an [EditText].
      *
-     * Behavior:
-     * - user click/focus => attach + show
-     * - losing focus => hide
+     * Default behavior:
+     * - click/focus => attach (+ show if [autoShowOnFocus])
+     * - losing focus => hide if [autoHideOnBlur]
      */
     fun bindTo(editText: EditText) {
         editText.setOnClickListener {
             attachTo(editText)
-            show()
+            if (autoShowOnFocus) show()
         }
         editText.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 attachTo(editText)
-                show()
+                if (autoShowOnFocus) show()
             } else {
-                hide()
+                if (autoHideOnBlur) hide()
             }
         }
     }
 
-    /**
-     * Attach keyboard logic to the given [EditText] (does not change visibility).
-     */
+    /** Attach keyboard logic to the given [EditText] (does not change visibility). */
     fun attachTo(editText: EditText) {
         keyboardView.attachTo(editText, candidateBarView)
     }

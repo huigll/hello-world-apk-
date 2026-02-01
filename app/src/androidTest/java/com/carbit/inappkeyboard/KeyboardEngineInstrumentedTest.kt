@@ -9,6 +9,7 @@ import com.carbit.inappkeyboard.keyboard.InAppKeyboardPanelView
 import com.carbit.inappkeyboard.keyboard.InAppKeyboardView
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -21,7 +22,6 @@ class KeyboardEngineInstrumentedTest {
             scenario.onActivity { a ->
                 val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
                 val keyboard = panel.keyboardView
-                val candidateBar = panel.candidateBarView
                 val et = a.findViewById<EditText>(R.id.et_text)
 
                 et.setText("")
@@ -32,6 +32,52 @@ class KeyboardEngineInstrumentedTest {
                 keyboard.injectKey("c")
 
                 assertEquals("abc", et.text.toString())
+            }
+        }
+    }
+
+    @Test
+    fun text_mode_space_enter_backspace() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { a ->
+                val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
+                val keyboard = panel.keyboardView
+                val et = a.findViewById<EditText>(R.id.et_text)
+
+                et.setText("")
+                panel.attachTo(et)
+
+                keyboard.injectKey("a")
+                keyboard.injectKey("space")
+                keyboard.injectKey("b")
+                keyboard.injectKey("enter")
+                keyboard.injectKey("c")
+                keyboard.injectKey("⌫")
+
+                assertEquals("a b\n", et.text.toString())
+            }
+        }
+    }
+
+    @Test
+    fun symbols_toggle_123_and_back_to_abc() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            scenario.onActivity { a ->
+                val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
+                val keyboard = panel.keyboardView
+                val et = a.findViewById<EditText>(R.id.et_text)
+
+                et.setText("")
+                panel.attachTo(et)
+
+                // Enter symbols
+                keyboard.injectKey("123")
+                keyboard.injectKey("@")
+                // Return to letters (symbols layout uses 'abc')
+                keyboard.injectKey("abc")
+                keyboard.injectKey("a")
+
+                assertEquals("@a", et.text.toString())
             }
         }
     }
@@ -57,26 +103,33 @@ class KeyboardEngineInstrumentedTest {
     }
 
     @Test
-    fun password_mode_injectKey_changes_value() {
+    fun password_mode_lang_key_does_not_cycle_and_no_candidates() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { a ->
                 val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
                 val keyboard = panel.keyboardView
+                val candidateBar = panel.candidateBarView
                 val et = a.findViewById<EditText>(R.id.et_password)
 
                 et.setText("")
                 panel.attachTo(et)
 
-                keyboard.injectKey("a")
-                keyboard.injectKey("b")
+                // Try to change language
+                val before = keyboard.currentLayout
+                keyboard.injectKey("lang")
+                val after = keyboard.currentLayout
 
-                assertEquals("ab", et.text.toString())
+                // Should stick to EN in password mode
+                assertEquals(before, after)
+
+                // Candidates should remain hidden
+                assertFalse(candidateBar.visibility == View.VISIBLE)
             }
         }
     }
 
     @Test
-    fun zh_pinyin_generates_candidates_after_typing() {
+    fun zh_pinyin_generates_candidates_and_click_commit() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { a ->
                 val panel = a.findViewById<InAppKeyboardPanelView>(R.id.keyboard_panel)
@@ -94,10 +147,13 @@ class KeyboardEngineInstrumentedTest {
                 val container = candidateBar.findViewById<LinearLayout>(
                     com.carbit.inappkeyboard.keyboard.R.id.candidates_container
                 )
-
-                // Candidate visibility and count are the main stability target.
                 assertTrue("candidate bar should be visible", candidateBar.visibility == View.VISIBLE)
                 assertTrue("expected >= 1 candidate", container.childCount >= 1)
+
+                // Click first candidate should commit Chinese text into EditText.
+                container.getChildAt(0).performClick()
+                val s = et.text.toString()
+                assertTrue("expected committed text after candidate click", s.isNotEmpty())
             }
         }
     }
