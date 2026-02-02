@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(pinyinime)
 
+# 16 KB page alignment for compatibility with 16 KB page size devices (Android 15+)
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+
 add_library(jni_pinyinime SHARED
         pinyin_jni.cpp
         share/dictbuilder.cpp
