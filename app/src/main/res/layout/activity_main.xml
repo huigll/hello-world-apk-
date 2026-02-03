@@ -48,6 +48,20 @@
             android:text="Phone" />
 
         <Button
+            android:id="@+id/btn_autocomplete"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="AutoComplete" />
+
+        <Button
+            android:id="@+id/btn_webview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="WebView" />
+
+        <Button
             android:id="@+id/btn_hide"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -115,6 +129,24 @@
             android:textColor="#FFFFFF"
             android:textColorHint="#888888"
             android:backgroundTint="#888888"
+            android:visibility="gone" />
+
+        <AutoCompleteTextView
+            android:id="@+id/actv_autocomplete"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="AutoCompleteTextView (tap to focus, use keyboard)"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:backgroundTint="#888888"
+            android:visibility="gone" />
+
+        <WebView
+            android:id="@+id/webview_input"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:visibility="gone" />
 
     </FrameLayout>

@@ -116,6 +116,13 @@ public class InAppKeyboardPanelView extends LinearLayout {
         keyboardView.attachTo(editText, candidateBarView);
     }
 
+    /**
+     * Attach to a custom commit target (e.g. WebView). Use when the input is not an EditText.
+     */
+    public void attachTo(ITextCommitTarget commitTarget) {
+        keyboardView.attachTo(commitTarget);
+    }
+
     public void show() {
         android.util.Log.d("InAppKeyboardPanelView", "show keyboard view=" + System.identityHashCode(keyboardView)
                 + " childCount=" + keyboardView.getChildCount()

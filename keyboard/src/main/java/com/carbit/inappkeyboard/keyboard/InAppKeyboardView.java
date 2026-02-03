@@ -55,6 +55,7 @@ public class InAppKeyboardView extends LinearLayout {
     private InputMode inputMode = InputMode.AUTO;
 
     private Editable target;
+    private ITextCommitTarget commitTarget;
     private EditText boundEditText;
     private ICandidateBar candidateBar;
     private PinyinDecoder pinyinDecoder;
@@ -156,6 +157,7 @@ public class InAppKeyboardView extends LinearLayout {
     public void attachTo(EditText editText, ICandidateBar candidateBar) {
         this.boundEditText = editText;
         this.candidateBar = candidateBar;
+        this.commitTarget = new EditTextCommitTarget(editText);
         attachTarget(editText.getText());
 
         try {
@@ -168,6 +170,23 @@ public class InAppKeyboardView extends LinearLayout {
         }
 
         wireBuiltInPinyinIfNeeded();
+        applyInputModeIfNeeded();
+    }
+
+    /**
+     * Attach to a custom commit target (e.g. WebView). Pinyin candidate bar is not used.
+     */
+    public void attachTo(ITextCommitTarget commitTarget) {
+        this.boundEditText = null;
+        this.target = null;
+        this.commitTarget = commitTarget;
+        this.candidateBar = null;
+        pinyinSession = null;
+        try {
+            if (pinyinDecoder != null) pinyinDecoder.close();
+        } catch (Throwable ignored) {
+        }
+        pinyinDecoder = null;
         applyInputModeIfNeeded();
     }
 
@@ -250,10 +269,10 @@ public class InAppKeyboardView extends LinearLayout {
     }
 
     private void wireBuiltInPinyinIfNeeded() {
-        final EditText et = boundEditText;
+        final ITextCommitTarget pinyinCommitTarget = this.commitTarget;
         final ICandidateBar bar = candidateBar;
 
-        if (bar == null || inputMode != InputMode.TEXT) {
+        if (bar == null || pinyinCommitTarget == null || inputMode != InputMode.TEXT) {
             pinyinSession = null;
             try {
                 if (pinyinDecoder != null) pinyinDecoder.close();
@@ -266,14 +285,6 @@ public class InAppKeyboardView extends LinearLayout {
         if (pinyinDecoder == null) pinyinDecoder = new PinyinDecoder(getContext());
         if (pinyinSession == null) pinyinSession = new PinyinImeSession(pinyinDecoder);
 
-        final ITextCommitTarget commitTarget = new ITextCommitTarget() {
-            @Override
-            public void insert(String text) {
-                int pos = Math.max(et.getSelectionStart(), et.getText().length());
-                et.getText().insert(pos, text);
-            }
-        };
-
         final Runnable refreshCandidates = new Runnable() {
             @Override
             public void run() {
@@ -282,7 +293,7 @@ public class InAppKeyboardView extends LinearLayout {
                     bar.clear();
                     return;
                 }
-                pinyinSession.bindCandidateClicks(commitTarget, bar);
+                pinyinSession.bindCandidateClicks(pinyinCommitTarget, bar);
             }
         };
 
@@ -314,7 +325,7 @@ public class InAppKeyboardView extends LinearLayout {
             @Override
             public boolean onSpace(Layout layout) {
                 if (layout == Layout.ZH_PINYIN && pinyinSession != null) {
-                    boolean consumed = pinyinSession.onSpaceCommitBest(commitTarget, bar);
+                    boolean consumed = pinyinSession.onSpaceCommitBest(pinyinCommitTarget, bar);
                     if (consumed) refreshCandidates.run();
                     return consumed;
                 }
@@ -512,19 +523,16 @@ public class InAppKeyboardView extends LinearLayout {
     }
 
     private void onKey(String label) {
-        if (target == null) return;
+        if (commitTarget == null) return;
 
         if ("⌫".equals(label)) {
             boolean consumed = onBackspaceListener != null && onBackspaceListener.onBackspace(currentLayout);
-            if (!consumed) {
-                int len = target.length();
-                if (len > 0) target.delete(len - 1, len);
-            }
+            if (!consumed) commitTarget.deleteLastChar(1);
         } else if ("enter".equals(label)) {
-            target.append("\n");
+            commitTarget.insert("\n");
         } else if ("space".equals(label)) {
             boolean consumed = onSpaceListener != null && onSpaceListener.onSpace(currentLayout);
-            if (!consumed) target.append(" ");
+            if (!consumed) commitTarget.insert(" ");
         } else if ("⇧".equals(label)) {
             shift = !shift;
         } else if ("123".equals(label)) {
@@ -555,7 +563,7 @@ public class InAppKeyboardView extends LinearLayout {
         } else {
             String ch = shift ? label.toUpperCase() : label;
             boolean consumed = onCommitTextListener != null && onCommitTextListener.onCommitText(currentLayout, ch);
-            if (!consumed) target.append(ch);
+            if (!consumed) commitTarget.insert(ch);
             if (shift) shift = false;
         }
     }
