@@ -1,6 +1,7 @@
 package com.carbit.inappkeyboard.keyboard;
 
 import android.content.res.AssetManager;
+import android.util.Log;
 import android.util.Xml;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -23,6 +24,10 @@ import java.util.List;
  * </Keyboard>
  */
 public final class AskXmlKeyboardParser {
+    private static final String ANDROID_NS = "http://schemas.android.com/apk/res/android";
+    private static final String TAG = "AskXmlKeyboardParser";
+    private static final boolean DEBUG = true;
+    private static int debugLoggedKeys = 0;
 
     public static final class Key {
         public final Integer code;
@@ -106,8 +111,13 @@ public final class AskXmlKeyboardParser {
     }
 
     private static String attr(XmlPullParser parser, String nameSuffix) {
+        String direct = parser.getAttributeValue(ANDROID_NS, nameSuffix);
+        if (direct != null) return direct;
+        direct = parser.getAttributeValue(null, nameSuffix);
+        if (direct != null) return direct;
         for (int i = 0; i < parser.getAttributeCount(); i++) {
-            if (nameSuffix.equals(parser.getAttributeName(i))) {
+            String name = parser.getAttributeName(i);
+            if (nameSuffix.equals(name) || name.endsWith(":" + nameSuffix)) {
                 return parser.getAttributeValue(i);
             }
         }
@@ -123,9 +133,17 @@ public final class AskXmlKeyboardParser {
             String[] parts = codesStr.split(",");
             if (parts.length > 0) {
                 String first = parts[0].trim();
-                try {
-                    code = Integer.parseInt(first);
-                } catch (NumberFormatException ignored) {
+                if (first.startsWith("@integer/")) {
+                    if (first.contains("key_code_shift")) {
+                        code = -1;
+                    } else if (first.contains("key_code_delete")) {
+                        code = -5;
+                    }
+                } else {
+                    try {
+                        code = Integer.parseInt(first);
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             }
         }
@@ -135,6 +153,21 @@ public final class AskXmlKeyboardParser {
         boolean isModifier = parseBoolean(attr(parser, "isModifier"), false);
         boolean isSticky = parseBoolean(attr(parser, "isSticky"), false);
         boolean isRepeatable = parseBoolean(attr(parser, "isRepeatable"), false);
+
+        if (DEBUG && (codesStr == null && label == null) && debugLoggedKeys < 5) {
+            debugLoggedKeys++;
+            StringBuilder sb = new StringBuilder();
+            sb.append("Key attrs:");
+            for (int i = 0; i < parser.getAttributeCount(); i++) {
+                sb.append(" ").append(parser.getAttributeName(i))
+                  .append("=").append(parser.getAttributeValue(i));
+            }
+            Log.d(TAG, sb.toString());
+        }
+//        Log.d(TAG, "Parsed Key: code=" + code + " label=" + label +
+//                " isModifier=" + isModifier +
+//                " isSticky=" + isSticky +
+//                " debugLoggedKeys=" + debugLoggedKeys);
 
         int next = parser.next();
         if (next != XmlPullParser.END_TAG || !"Key".equals(parser.getName())) {

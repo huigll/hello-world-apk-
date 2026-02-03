@@ -1,6 +1,7 @@
 package com.carbit.inappkeyboard;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,7 +13,7 @@ import com.carbit.inappkeyboard.keyboard.InAppKeyboardPanelView;
 import com.carbit.inappkeyboard.keyboard.InAppKeyboardView;
 
 public class MainActivity extends AppCompatActivity {
-
+    public static String TAG = "MainActivity";
     private EditText activeEditText;
     private InAppKeyboardPanelView keyboardPanel;
 
@@ -103,7 +104,21 @@ public class MainActivity extends AppCompatActivity {
         tvCurrent.setText("Current: " + type);
 
         activeEditText = et;
+        Log.d(TAG, "Showing keyboard for " + type);
         keyboardPanel.bindTo(et);
+
+        // Explicitly align layout by input type.
+        InAppKeyboardView keyboard = keyboardPanel.getKeyboardView();
+        if ("Number".equals(type) || "Phone".equals(type)) {
+            keyboard.setInputMode(InAppKeyboardView.InputMode.NUMBER);
+            keyboard.setLayout(InAppKeyboardView.Layout.NUMERIC);
+        } else if ("Password".equals(type)) {
+            keyboard.setInputMode(InAppKeyboardView.InputMode.PASSWORD);
+            keyboard.setLayout(InAppKeyboardView.Layout.EN);
+        } else {
+            keyboard.setInputMode(InAppKeyboardView.InputMode.TEXT);
+            keyboard.setLayout(InAppKeyboardView.Layout.EN);
+        }
     }
 
     @Override

@@ -41,8 +41,13 @@ public class InAppKeyboardPanelView extends LinearLayout {
 
         this.keyboardView = new InAppKeyboardView(context);
         keyboardView.setId(R.id.keyboard_view);
-        keyboardView.setVisibility(View.GONE);
-        keyboardContainer.addView(keyboardView);
+        keyboardView.setVisibility(View.INVISIBLE);
+        keyboardView.ensureBuilt();
+        FrameLayout.LayoutParams kvParams = new FrameLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+        );
+        keyboardContainer.addView(keyboardView, kvParams);
 
         addView(candidateBarView, new LayoutParams(LayoutParams.MATCH_PARENT, candidateBarHeightPx));
         addView(keyboardContainer);
@@ -112,11 +117,18 @@ public class InAppKeyboardPanelView extends LinearLayout {
     }
 
     public void show() {
+        android.util.Log.d("InAppKeyboardPanelView", "show keyboard view=" + System.identityHashCode(keyboardView)
+                + " childCount=" + keyboardView.getChildCount()
+                + " size=" + keyboardView.getWidth() + "x" + keyboardView.getHeight());
+        keyboardView.ensureBuilt();
+        keyboardView.requestLayout();
+        keyboardView.invalidate();
         keyboardView.setVisibility(View.VISIBLE);
+        requestLayout();
     }
 
     public void hide() {
-        keyboardView.setVisibility(View.GONE);
+        keyboardView.setVisibility(View.INVISIBLE);
         candidateBarView.clear();
     }
 

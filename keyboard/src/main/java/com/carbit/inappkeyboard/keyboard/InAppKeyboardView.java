@@ -7,12 +7,14 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.InputType;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.graphics.Color;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -26,6 +28,8 @@ import java.util.List;
  * shown on a VirtualDisplay (where the system IME often won't appear).
  */
 public class InAppKeyboardView extends LinearLayout {
+    private static final String TAG = "InAppKeyboardView";
+    private static final boolean DEBUG = true;
 
     public enum Layout { EN, ZH_PINYIN, FR, AR, SYMBOLS, NUMERIC }
 
@@ -165,6 +169,13 @@ public class InAppKeyboardView extends LinearLayout {
 
         wireBuiltInPinyinIfNeeded();
         applyInputModeIfNeeded();
+    }
+
+    /** Ensure keys are built (e.g., after attachment/visibility changes). */
+    public void ensureBuilt() {
+        if (getChildCount() == 0) {
+            rebuild();
+        }
     }
 
     public void release() {
@@ -326,6 +337,7 @@ public class InAppKeyboardView extends LinearLayout {
 
     private void rebuild() {
         removeAllViews();
+        if (DEBUG) Log.d(TAG, "rebuild layout=" + currentLayout + " view=" + System.identityHashCode(this));
         switch (currentLayout) {
             case EN:
                 buildEnQwerty();
@@ -389,6 +401,7 @@ public class InAppKeyboardView extends LinearLayout {
         try {
             AskXmlKeyboardParser.Layout layout = AskXmlKeyboardParser.parseAsset(getContext().getAssets(), assetPath);
 
+            int totalKeys = 0;
             for (List<AskXmlKeyboardParser.Key> row : layout.rows) {
                 List<String> labels = new ArrayList<>();
                 for (AskXmlKeyboardParser.Key key : row) {
@@ -397,13 +410,29 @@ public class InAppKeyboardView extends LinearLayout {
                         if (key.code == -1) label = "⇧";
                         else if (key.code == -5) label = "⌫";
                         else label = key.label != null ? key.label : String.valueOf((char) (int) key.code);
+                    } else if (key.label != null && !key.label.isEmpty()) {
+                        label = key.label;
                     }
                     if (label != null) labels.add(label);
                 }
-                if (!labels.isEmpty()) addRow(labels);
+                if (!labels.isEmpty()) {
+                    totalKeys += labels.size();
+                    addRow(labels);
+                    if (DEBUG) Log.d(TAG, "addRow labels=" + labels.size() + " totalKeys=" + totalKeys);
+                }
+            }
+
+            if (totalKeys == 0) {
+                // Fallback: minimal qwerty when ASK parsing yields no keys.
+                addRow(list("q","w","e","r","t","y","u","i","o","p"));
+                addRow(list("a","s","d","f","g","h","j","k","l"));
+                addRow(list("⇧","z","x","c","v","b","n","m","⌫"));
             }
 
             addRow(list("lang", "123", "space", "enter"));
+            if (DEBUG) Log.d(TAG, "rebuild done childCount=" + getChildCount() + " view=" + System.identityHashCode(this));
+            requestLayout();
+            invalidate();
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse keyboard layout: " + assetPath, e);
         }
@@ -424,6 +453,9 @@ public class InAppKeyboardView extends LinearLayout {
             btn.setAllCaps(false);
             btn.setMinHeight(keyHeight);
             btn.setMinimumHeight(keyHeight);
+            // Make keys visible against dark background
+            btn.setBackgroundColor(Color.parseColor("#8E7CC3"));
+            btn.setTextColor(Color.WHITE);
 
             if (isUltraWide) {
                 int w = "space".equals(label) ? fixedKeyWidth * 4 : "enter".equals(label) || "lang".equals(label) ? fixedKeyWidth * 2 : fixedKeyWidth;
