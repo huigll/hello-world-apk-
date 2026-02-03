@@ -1,8 +1,10 @@
 package com.carbit.inappkeyboard;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.AutoCompleteTextView;
@@ -128,12 +130,32 @@ public class MainActivity extends AppCompatActivity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
+        // 避免 WebView 内输入框聚焦时弹出系统输入法，仅使用 in-app 键盘
+        webView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) hideSystemKeyboard();
+            }
+        });
+        webView.requestFocus(View.FOCUS_DOWN);
+        // readonly 防止点击时触发系统输入法，内容由 in-app 键盘通过 JS 注入
         String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body style='margin:8px;background:#1a1a1a;color:#eee'>" +
                 "<p style='color:#888'>Tap the input below, then use the in-app keyboard:</p>" +
-                "<input type='text' id='inp' placeholder='WebView input' style='width:100%;padding:12px;font-size:16px;color:#fff;background:#333;border:1px solid #555' />" +
+                "<input type='text' id='inp' readonly placeholder='WebView input' style='width:100%;padding:12px;font-size:16px;color:#fff;background:#333;border:1px solid #555' />" +
                 "</body></html>";
         webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
-        webView.requestFocus(View.FOCUS_DOWN);
+    }
+
+    private void hideSystemKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            View focus = getCurrentFocus();
+            if (focus != null) {
+                imm.hideSoftInputFromWindow(focus.getWindowToken(), 0);
+            } else {
+                imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0);
+            }
+        }
     }
 
     private void showField(String type, View inputView,
@@ -156,8 +178,15 @@ public class MainActivity extends AppCompatActivity {
             keyboardPanel.attachTo((EditText) inputView);
             keyboardPanel.show();
         } else if (inputView instanceof WebView) {
+            hideSystemKeyboard();
             keyboardPanel.attachTo(new WebViewCommitTarget((WebView) inputView));
             keyboardPanel.show();
+            inputView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    hideSystemKeyboard();
+                }
+            }, 100);
         }
 
         InAppKeyboardView keyboard = keyboardPanel.getKeyboardView();
