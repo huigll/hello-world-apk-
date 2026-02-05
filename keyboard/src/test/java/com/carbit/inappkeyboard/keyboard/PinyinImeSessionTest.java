@@ -62,6 +62,14 @@ public class PinyinImeSessionTest {
         public void insert(String text) {
             sb.append(text);
         }
+
+        @Override
+        public void deleteLastChar(int count) {
+            if (count <= 0) return;
+            int len = sb.length();
+            if (len == 0) return;
+            sb.delete(Math.max(0, len - count), len);
+        }
     }
 
     @Test
@@ -75,6 +83,7 @@ public class PinyinImeSessionTest {
         assertEquals("n", session.composingText());
         assertEquals("n", decoder.lastPinyin);
         assertFalse(bar.lastCandidates.isEmpty());
+        assertEquals("n", bar.lastCandidates.get(0));
         assertFalse(bar.cleared);
     }
 
@@ -107,9 +116,29 @@ public class PinyinImeSessionTest {
         session.bindCandidateClicks(target, bar);
 
         assertNotNull(bar.lastOnClick);
-        bar.lastOnClick.onClick(2, bar.lastCandidates.get(2));
+        // index 0 is raw pinyin, index 1 maps to decoder candidate 0.
+        bar.lastOnClick.onClick(1, bar.lastCandidates.get(1));
 
-        assertEquals("尼", target.sb.toString());
+        assertEquals("你", target.sb.toString());
+        assertFalse(session.hasComposing());
+        assertTrue(bar.cleared);
+    }
+
+    @Test
+    public void candidate_click_on_raw_pinyin_commits_letters() {
+        FakeDecoder decoder = new FakeDecoder();
+        FakeCandidateBar bar = new FakeCandidateBar();
+        BufferTarget target = new BufferTarget();
+        PinyinImeSession session = new PinyinImeSession(decoder);
+
+        session.onCommitChar("n", bar);
+        session.onCommitChar("i", bar);
+        session.bindCandidateClicks(target, bar);
+
+        assertNotNull(bar.lastOnClick);
+        bar.lastOnClick.onClick(0, bar.lastCandidates.get(0));
+
+        assertEquals("ni", target.sb.toString());
         assertFalse(session.hasComposing());
         assertTrue(bar.cleared);
     }
