@@ -1,5 +1,6 @@
 package com.carbit.inappkeyboard.keyboard;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -51,11 +52,18 @@ public class PinyinImeSession {
     }
 
     public void bindCandidateClicks(final ITextCommitTarget target, ICandidateBar candidateBar) {
-        List<String> list = decoder.candidates(composing.toString(), 10);
+        final String raw = composing.toString();
+        final List<String> list = withRawCandidate(raw, decoder.candidates(raw, 10));
         candidateBar.setCandidates(list, new ICandidateBar.OnCandidateClickListener() {
             @Override
             public void onClick(int index, String text) {
-                String commit = decoder.choose(index);
+                // index=0 is the raw pinyin letters; others map to decoder candidates.
+                String commit;
+                if (index == 0) {
+                    commit = raw;
+                } else {
+                    commit = decoder.choose(index - 1);
+                }
                 target.insert(commit);
                 clear();
                 candidateBar.clear();
@@ -68,11 +76,19 @@ public class PinyinImeSession {
             candidateBar.clear();
             return;
         }
-        candidateBar.setCandidates(decoder.candidates(composing.toString(), 10), new ICandidateBar.OnCandidateClickListener() {
+        final String raw = composing.toString();
+        candidateBar.setCandidates(withRawCandidate(raw, decoder.candidates(raw, 10)), new ICandidateBar.OnCandidateClickListener() {
             @Override
             public void onClick(int index, String text) {
                 // no-op for refresh (host wires commits via bindCandidateClicks)
             }
         });
+    }
+
+    private static List<String> withRawCandidate(String raw, List<String> candidates) {
+        ArrayList<String> out = new ArrayList<>();
+        if (raw != null && !raw.isEmpty()) out.add(raw);
+        if (candidates != null && !candidates.isEmpty()) out.addAll(candidates);
+        return out;
     }
 }
