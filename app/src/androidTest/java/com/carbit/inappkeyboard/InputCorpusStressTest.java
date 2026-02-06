@@ -52,7 +52,7 @@ public class InputCorpusStressTest {
                     if (ch >= 'a' && ch <= 'z') {
                         session.onCommitChar(String.valueOf(ch), bar);
                         // Avoid overlong composing strings to prevent native crashes.
-                        if (session.composingText().length() >= 10) {
+                        if (session.composingText().length() >= 6) {
                             commitRawIfNeeded(session, bar, target);
                         }
                     } else {

@@ -21,13 +21,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <android/log.h>
-
-#ifndef LOG_TAG
-#define LOG_TAG "PinyinUserDict"
-#endif
-#ifndef LOGD
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
-#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -40,6 +33,10 @@
 #include <math.h>
 
 namespace ime_pinyin {
+
+#ifndef ALOGD
+#define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "PinyinUserDict", __VA_ARGS__)
+#endif
 
 #ifdef ___DEBUG_PERF___
 static uint64 _ellapse_ = 0;
