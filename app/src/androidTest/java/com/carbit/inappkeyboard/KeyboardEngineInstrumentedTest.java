@@ -107,18 +107,23 @@ public class KeyboardEngineInstrumentedTest {
                 int textClass = etText.getInputType() & InputType.TYPE_MASK_CLASS;
                 assertEquals(InputType.TYPE_CLASS_TEXT, textClass);
 
+                // Ensure auto inference is enabled for this test.
+                keyboard.setInputMode(InAppKeyboardView.InputMode.AUTO);
                 panel.attachTo(etText);
                 assertEquals(InAppKeyboardView.InputMode.TEXT, keyboard.getInputMode());
 
                 EditText etNumber = activity.findViewById(R.id.et_number);
+                keyboard.setInputMode(InAppKeyboardView.InputMode.AUTO);
                 panel.attachTo(etNumber);
                 assertEquals(InAppKeyboardView.Layout.NUMERIC, keyboard.getCurrentLayout());
 
                 EditText etPhone = activity.findViewById(R.id.et_phone);
+                keyboard.setInputMode(InAppKeyboardView.InputMode.AUTO);
                 panel.attachTo(etPhone);
                 assertEquals(InAppKeyboardView.Layout.NUMERIC, keyboard.getCurrentLayout());
 
                 EditText etPassword = activity.findViewById(R.id.et_password);
+                keyboard.setInputMode(InAppKeyboardView.InputMode.AUTO);
                 panel.attachTo(etPassword);
                 assertEquals(InAppKeyboardView.Layout.EN, keyboard.getCurrentLayout());
             });
@@ -134,6 +139,7 @@ public class KeyboardEngineInstrumentedTest {
                 EditText et = activity.findViewById(R.id.et_text);
 
                 panel.attachTo(et);
+                keyboard.setInputMode(InAppKeyboardView.InputMode.TEXT);
                 keyboard.setLayout(InAppKeyboardView.Layout.EN);
 
                 assertLayoutCycle(keyboard, Arrays.asList(
@@ -156,6 +162,7 @@ public class KeyboardEngineInstrumentedTest {
                 EditText et = activity.findViewById(R.id.et_number);
 
                 et.setText("");
+                keyboard.setInputMode(InAppKeyboardView.InputMode.AUTO);
                 panel.attachTo(et);
                 assertEquals(InAppKeyboardView.Layout.NUMERIC, keyboard.getCurrentLayout());
 
@@ -181,6 +188,7 @@ public class KeyboardEngineInstrumentedTest {
                 EditText et = activity.findViewById(R.id.et_number);
 
                 et.setText("");
+                keyboard.setInputMode(InAppKeyboardView.InputMode.AUTO);
                 panel.attachTo(et);
 
                 keyboard.injectKey("1");
@@ -202,6 +210,7 @@ public class KeyboardEngineInstrumentedTest {
                 EditText et = activity.findViewById(R.id.et_password);
 
                 et.setText("");
+                keyboard.setInputMode(InAppKeyboardView.InputMode.AUTO);
                 panel.attachTo(et);
 
                 InAppKeyboardView.Layout before = keyboard.getCurrentLayout();
